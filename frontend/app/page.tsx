@@ -54,14 +54,17 @@ const mobilePlans = [
   {
     title: "Plano 30 GB",
     description: "Dados de sobra com WhatsApp grátis para conversar sem gastar da franquia.",
+    price: "R$ 49,90"
   },
   {
     title: "Plano 50 GB",
     description: "Ideal para redes sociais, vídeos curtos, chamadas e navegação intensa.",
+    price: "R$ 79,90"
   },
   {
-    title: "Fixo Ilimitado",
+    title: "Plano 100 GB",
     description: "Ligações ilimitadas para fixo e móvel com praticidade no dia a dia.",
+    price: "R$ 109,90"
   },
 ];
 
@@ -88,7 +91,7 @@ const footerLinks = ["Sobre a Serrasul", "Planos", "Teste de Velocidade", "Statu
 export default function Page() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [testeExecutado, setTesteExecutado] = useState(false);
-  
+
   function handleSendMessage(e: React.MouseEvent<HTMLButtonElement>): void {
     e.preventDefault();
     window.open("https://wa.me/5500000000000", "_blank");
@@ -367,63 +370,28 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              <article className="rounded-4xl border border-[var(--color-medium)]/10 bg-[var(--color-light)] p-6 shadow-[0_16px_40px_rgba(33,38,64,0.08)]">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-medium)] text-white">
-                  <Smartphone className="h-7 w-7" />
+            <div className="grid gap-6 lg:grid-cols-1">
+              <article className="rounded-4xl border border-(--color-medium)/10 bg-(--color-light) p-6 shadow-[0_16px_40px_rgba(33,38,64,0.08)]">
+                <div className="flex items-start justify-between gap-4">
+                  <p className="text-sm font-bold uppercase tracking-[0.35em] text-(--color-orange)">Móvel</p>
+                  <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Planos de telefonia móvel, para utilizar internet em todo lugar!</h2>
                 </div>
-                <h3 className="mt-5 text-2xl font-black text-[var(--color-medium)]">Internet móvel com GB de verdade</h3>
-                <p className="mt-3 text-sm leading-7 text-[var(--color-medium)]/70">
-                  Planos com franquia ampla para streaming, navegação e videochamadas, sempre com WhatsApp grátis para
-                  não perder contato.
-                </p>
-                <div className="mt-5 space-y-3 text-sm text-[var(--color-medium)]/80">
-                  <p className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-[var(--color-orange)]" />
-                    WhatsApp grátis incluso
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-[var(--color-orange)]" />
-                    Até 50 GB para navegar sem preocupação
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-[var(--color-orange)]" />
-                    Ideal para vendas e upgrades recorrentes
-                  </p>
+                <div className="mt-6 space-y-4">
+                  {mobilePlans.map((plan) => (
+                    <div key={plan.title} className="rounded-3xl border border-[--color-medium] bg-white/5 p-4 ">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--color-orange)] text-white">
+                          <Smartphone className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0 border border-white/10 rounded-2xl bg-white/5 p-0">
+                          <h3 className="text-lg font-semibold text-[--color-dark]">{plan.title}</h3>
+                          <p className="mt-1 text-sm leading-6 text-[--color-dark]/65">{plan.description}</p>
+                          <p className="mt-2 text-sm font-bold text-[--color-orange]">{plan.price}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </article>
-
-              <article className="rounded-4xl border border-[var(--color-medium)]/10 bg-white p-6 shadow-[0_16px_40px_rgba(33,38,64,0.08)] md:col-span-1">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-orange)] text-white">
-                  <Phone className="h-7 w-7" />
-                </div>
-                <h3 className="mt-5 text-2xl font-black text-[var(--color-medium)]">Telefonia fixa ilimitada</h3>
-                <p className="mt-3 text-sm leading-7 text-[var(--color-medium)]/70">
-                  Ligações ilimitadas para fixo e móvel com estabilidade e excelente custo-benefício para casa e
-                  empresa.
-                </p>
-                <div className="mt-5 rounded-3xl bg-[var(--color-medium)] p-5 text-white">
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/45">Destaque comercial</p>
-                  <p className="mt-2 text-xl font-black">Mais economia para quem fala muito.</p>
-                </div>
-              </article>
-
-              <article className="rounded-4xl border border-[var(--color-medium)]/10 bg-[linear-gradient(160deg,var(--color-medium),var(--color-medium))] p-6 text-white shadow-[0_16px_40px_rgba(33,38,64,0.14)] md:col-span-1">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-white">
-                  <Wifi className="h-7 w-7" />
-                </div>
-                <h3 className="mt-5 text-2xl font-black">Combinação ideal para a família</h3>
-                <p className="mt-3 text-sm leading-7 text-white/78">
-                  Internet residencial, chip móvel e telefonia fixa sob a mesma proposta de valor para aumentar ticket
-                  e retenção.
-                </p>
-                <a
-                  href="#contato"
-                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-[#212640] transition hover:translate-x-0.5"
-                >
-                  Montar combo
-                  <ChevronRight className="h-4 w-4" />
-                </a>
               </article>
             </div>
           </div>
