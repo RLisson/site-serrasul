@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { MouseEvent, useState } from "react";
 import {
   CheckCircle2,
   ChevronRight,
@@ -65,11 +65,34 @@ const mobilePlans = [
   },
 ];
 
+const telefoniaFixa = [
+  {
+    title: "Plano 200min",
+    description: "200 minutos mensais para ligações locais e nacionais, com qualidade garantida.",
+    value: "R$ 39,90/mês",
+  },
+  {
+    title: "Plano 500min",
+    description: "500 minutos para falar com quem quiser, ideal para famílias e pequenas empresas.",
+    value: "R$ 69,90/mês",
+  },
+  {
+    title: "Plano Ilimitado",
+    description: "Ligações ilimitadas para fixo e móvel, ideal para quem fala muito e quer economia.",
+    value: "R$ 99,90/mês",
+  }
+]
+
 const footerLinks = ["Sobre a Serrasul", "Planos", "Teste de Velocidade", "Status da Rede"];
 
 export default function Page() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [testeExecutado, setTesteExecutado] = useState(false);
+  
+  function handleSendMessage(e: React.MouseEvent<HTMLButtonElement>): void {
+    e.preventDefault();
+    window.open("https://wa.me/5500000000000", "_blank");
+  }
 
   return (
     <main className="min-h-screen bg-(--color-light) text-(--color-medium)">
@@ -317,27 +340,30 @@ export default function Page() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-6 lg:grid-cols-[1fr_1.15fr]">
             <div className="rounded-4xl bg-[var(--color-medium)] p-8 text-white shadow-[0_20px_50px_rgba(33,38,64,0.18)]">
-              <p className="text-sm font-bold uppercase tracking-[0.35em] text-[var(--color-orange)]">Móvel e Fixo</p>
-              <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Conectividade que acompanha toda a rotina.</h2>
-              <p className="mt-4 max-w-lg text-white/72">
-                Leve internet, celular e telefonia fixa com uma proposta única, competitiva e fácil de vender em uma só
-                jornada de contratação.
-              </p>
+              <p className="text-sm font-bold uppercase tracking-[0.35em] text-[var(--color-orange)]">Fixo</p>
+              <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Planos de telefonia fixa, para suas chamadas.</h2>
 
               <div className="mt-8 space-y-4">
-                {mobilePlans.map((plan) => (
+                {telefoniaFixa.map((plan) => (
                   <div key={plan.title} className="rounded-3xl border border-white/10 bg-white/5 p-4">
                     <div className="flex items-start gap-3">
                       <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--color-orange)] text-white">
-                        {plan.title.includes("Fixo") ? <Phone className="h-5 w-5" /> : <Smartphone className="h-5 w-5" />}
+                        <Phone className="h-5 w-5" />
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-white">{plan.title}</h3>
                         <p className="mt-1 text-sm leading-6 text-white/65">{plan.description}</p>
+                        <p className="mt-2 text-sm font-bold text-white">{plan.value}</p>
                       </div>
                     </div>
                   </div>
                 ))}
+                <div className="mt-6 flex items-center justify-center">
+                  <button onClick={(e) => handleSendMessage(e)} className="rounded-full bg-[var(--color-orange)] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#F25F29]/30 transition hover:bg-[#F25A38] hover:translate-x-0.5 hover:-translate-y-0.5 inline-flex items-center gap-2 cursor-pointer">
+                    Fale com nossos consultores
+                    <MessageCircle className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -443,19 +469,19 @@ export default function Page() {
                     </div>
                   ))}
                 </div>
-                  ) : (
-                  <div className="mt-6 flex items-center justify-center">
-                    <button
-                      onClick={() => setTesteExecutado(true)}
-                      className="inline-flex items-center gap-2 rounded-full bg-(--color-orange) px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#F25F29]/30 transition hover:bg-[#F25A38]"
-                    >
-                      Iniciar teste
-                      <Zap className="h-4 w-4" />
-                    </button>
-                  </div>
-                  )
+              ) : (
+                <div className="mt-6 flex items-center justify-center">
+                  <button
+                    onClick={() => setTesteExecutado(true)}
+                    className="inline-flex items-center gap-2 rounded-full bg-(--color-orange) px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#F25F29]/30 transition hover:bg-[#F25A38]"
+                  >
+                    Iniciar teste
+                    <Zap className="h-4 w-4" />
+                  </button>
+                </div>
+              )
               }
-              </a>
+            </a>
 
             <a
               href="#"
