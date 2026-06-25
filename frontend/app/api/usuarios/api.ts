@@ -4,7 +4,7 @@ import { verifyToken } from "../../lib/auth";
 
 export async function GET(request: Request) {
   try {
-    verifyToken(request);
+    await verifyToken(request);
     const users = await auth.listUsers();
     return NextResponse.json(users.users);
   } catch (error) {
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request){
   try {
-    verifyToken(request);
+    await verifyToken(request);
     const { nome, email, password } = await request.json();
     if (!nome || !email || !password) {
       return NextResponse.json({ error: "Nome, email e senha são obrigatórios" }, { status: 400 });
@@ -58,7 +58,7 @@ export async function POST(request: Request){
 
 export async function DELETE(request: Request) {
   try {
-    verifyToken(request);
+    await verifyToken(request);
     const { uid } = await request.json();
     if (!uid) {
       return NextResponse.json({ error: "UID do usuário é obrigatório" }, { status: 400 });
@@ -76,7 +76,7 @@ export async function DELETE(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    verifyToken(request);
+    await verifyToken(request);
     const { uid, nome, email, ativo } = await request.json();
     if (!uid) {
       return NextResponse.json({ error: "UID do usuário é obrigatório" }, { status: 400 });

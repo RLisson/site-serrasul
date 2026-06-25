@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   try {
-    verifyToken(request);
+    await verifyToken(request);
     const planosRef = db.collection("planos").where("categoria", "==", "movel");
     const snapshot = await planosRef.get();
     const planos = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    verifyToken(request);
+    await verifyToken(request);
     const { nome, preco, descricao, beneficios } =
       await request.json();
     if (!nome || !preco || !descricao || !beneficios) {
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    verifyToken(request);
+    await verifyToken(request);
     const { id } = await request.json();
     if (!id) {
       return NextResponse.json({ error: "ID do plano é obrigatório" }, { status: 400 });
@@ -61,7 +61,7 @@ export async function DELETE(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    verifyToken(request);
+    await verifyToken(request);
     const { id, nome, preco, descricao, beneficios } = await request.json();
     if (!id) {
       return NextResponse.json({ error: "ID do plano é obrigatório" }, { status: 400 });

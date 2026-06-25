@@ -1,6 +1,6 @@
+import { NextResponse } from "next/server";
 import { db } from "../../../lib/firebaseAdmin";
 import { verifyToken } from "../../../lib/auth";
-import { NextResponse } from "next/dist/server/web/spec-extension/response";
 
 type updateData = {
   nome?: string;
@@ -13,9 +13,8 @@ type updateData = {
 
 export async function GET(request: Request) {
   try {
-    verifyToken(request);
-    const planosRef = db
-      .collection("planos")
+    await verifyToken(request);
+    const planosRef = db.collection("planos").where("categoria", "==", "internet");
     const snapshot = await planosRef.get();
     const planos = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
@@ -28,7 +27,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    verifyToken(request);
+    await verifyToken(request);
     const { nome, velocidade, preco, descricao, highlight, beneficios } =
       await request.json();
     if (
@@ -88,7 +87,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    verifyToken(request);
+    await verifyToken(request);
     const { id } = await request.json();
     if (!id) {
       return NextResponse.json({ error: "ID do plano é obrigatório" }, { status: 400 });
@@ -103,7 +102,7 @@ export async function DELETE(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    verifyToken(request);
+    await verifyToken(request);
     const { id, nome, velocidade, preco, descricao, highlight, beneficios } =
       await request.json();
     if (!id) {
