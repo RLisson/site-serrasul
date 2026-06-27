@@ -15,7 +15,7 @@ api.interceptors.request.use(
     const currentUser = clientAuth?.currentUser;
 
     if (currentUser) {
-      const token = await currentUser.getIdToken();
+      const token = await currentUser.getIdToken(true);
       config.headers.set("Authorization", `Bearer ${token}`);
     }
 

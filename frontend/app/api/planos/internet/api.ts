@@ -20,8 +20,13 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ success: true, data: planos }, { status: 200 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unauthorized";
-    return NextResponse.json({ error: message }, { status: 401 });
+    const message = error instanceof Error ? error.message : "Erro ao buscar planos";
+
+    if (message.includes("5 NOT_FOUND")) {
+      return NextResponse.json({ success: true, data: [] }, { status: 200 });
+    }
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -33,10 +38,10 @@ export async function POST(request: Request) {
     if (
       !nome ||
       !velocidade ||
-      !preco ||
+      preco === undefined ||
+      preco === null ||
       !descricao ||
-      !highlight ||
-      !beneficios
+      !Array.isArray(beneficios)
     ) {
       return NextResponse.json(
         { error: "Todos os campos são obrigatórios" },
@@ -80,8 +85,23 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unauthorized";
-    return NextResponse.json({ error: message }, { status: 401 });
+    const message = error instanceof Error ? error.message : "Erro ao criar plano";
+
+    if (message.includes("5 NOT_FOUND")) {
+      return NextResponse.json(
+        {
+          error:
+            "Firestore não encontrado ou não habilitado para este projeto. Verifique se o banco foi criado e se o projectId do Admin SDK está correto.",
+        },
+        { status: 500 },
+      );
+    }
+
+    if (message.includes("Token de autenticação")) {
+      return NextResponse.json({ error: message }, { status: 401 });
+    }
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

@@ -1,16 +1,31 @@
 import { auth } from "./firebaseAdmin";
 
 export async function verifyToken(request: Request) {
-  const authHeader = request.headers.get("Authorization");
+  const authHeader = request.headers.get("authorization") ?? request.headers.get("Authorization");
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader) {
     throw new Error("Token de autenticação ausente ou inválido");
   }
-  const token = authHeader.split("Bearer ")[1];
+
+  const tokenMatch = authHeader.match(/^Bearer\s+(.+)$/i);
+
+  if (!tokenMatch) {
+    throw new Error("Token de autenticação ausente ou inválido");
+  }
+
+  const token = tokenMatch[1].trim();
+
   try {
     const decodedToken = await auth.verifyIdToken(token);
     return decodedToken;
-  } catch {
-    throw new Error("Token de autenticação inválido");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Token de autenticação inválido";
+    throw new Error(`Token de autenticação inválido: ${message}`);
   }
+}
+
+export async function getUserFromToken(request: Request) {
+  const decodedToken = await verifyToken(request);
+  const userRecord = await auth.getUser(decodedToken.uid);
+  return userRecord;
 }

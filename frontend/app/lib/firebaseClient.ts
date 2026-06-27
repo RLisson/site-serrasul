@@ -10,7 +10,11 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const hasClientConfig = Object.values(firebaseConfig).every(Boolean);
+const missingClientConfigKeys = Object.entries(firebaseConfig)
+  .filter(([, value]) => !value)
+  .map(([key]) => key);
+
+const hasClientConfig = missingClientConfigKeys.length === 0;
 
 const app = hasClientConfig
   ? getApps().length
@@ -19,3 +23,6 @@ const app = hasClientConfig
   : null;
 
 export const clientAuth = app ? getAuth(app) : null;
+export const firebaseClientConfigError = hasClientConfig
+  ? null
+  : `Configuração Firebase incompleta. Falta(m): ${missingClientConfigKeys.join(", ")}`;

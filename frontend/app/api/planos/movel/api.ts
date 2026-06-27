@@ -11,6 +11,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, data: planos }, { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unauthorized";
+
+    if (message.includes("5 NOT_FOUND")) {
+      return NextResponse.json({ success: true, data: [] }, { status: 200 });
+    }
+
     return NextResponse.json({ error: message }, { status: 401 });
   }
 }
