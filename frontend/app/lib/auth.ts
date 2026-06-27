@@ -1,6 +1,7 @@
-import { auth } from "./firebaseAdmin";
+import { getAuth } from "./firebaseAdmin";
 
 export async function verifyToken(request: Request) {
+  const auth = getAuth();
   const authHeader = request.headers.get("authorization") ?? request.headers.get("Authorization");
 
   if (!authHeader) {
@@ -26,6 +27,7 @@ export async function verifyToken(request: Request) {
 
 export async function getUserFromToken(request: Request) {
   const decodedToken = await verifyToken(request);
+  const auth = getAuth();
   const userRecord = await auth.getUser(decodedToken.uid);
   return userRecord;
 }

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { auth, db } from "../../lib/firebaseAdmin";
+import { getAuth, getDb } from "../../lib/firebaseAdmin";
 import { verifyToken } from "../../lib/auth";
 
 export async function GET(request: Request) {
   try {
     await verifyToken(request);
+    const auth = getAuth();
     const users = await auth.listUsers();
     return NextResponse.json(users.users);
   } catch (error) {
@@ -16,6 +17,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request){
   try {
     await verifyToken(request);
+    const auth = getAuth();
+    const db = getDb();
     const { nome, email, password } = await request.json();
     if (!nome || !email || !password) {
       return NextResponse.json({ error: "Nome, email e senha são obrigatórios" }, { status: 400 });
@@ -59,6 +62,8 @@ export async function POST(request: Request){
 export async function DELETE(request: Request) {
   try {
     await verifyToken(request);
+    const auth = getAuth();
+    const db = getDb();
     const { uid } = await request.json();
     if (!uid) {
       return NextResponse.json({ error: "UID do usuário é obrigatório" }, { status: 400 });
@@ -77,6 +82,8 @@ export async function DELETE(request: Request) {
 export async function PUT(request: Request) {
   try {
     await verifyToken(request);
+    const auth = getAuth();
+    const db = getDb();
     const { uid, nome, email, ativo } = await request.json();
     if (!uid) {
       return NextResponse.json({ error: "UID do usuário é obrigatório" }, { status: 400 });

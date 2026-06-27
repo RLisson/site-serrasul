@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CheckCircle2,
   ChevronRight,
@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import logo from "../public/LOGO.png";
+import { PlanoFixo, PlanoInternet, PlanoMovel } from "@/types/planosType";
+import { planosFixo, planosInternet, planosMovel } from "@/services/planos";
 
 const navigation = [
   { label: "Planos", href: "#planos" },
@@ -26,76 +28,63 @@ const navigation = [
   { label: "Contato", href: "#contato" },
 ];
 
-const internetPlans = [
-  {
-    name: "400 Mega",
-    price: "R$ 119,90",
-    description: "Fibra estável para streaming, aulas e home office com muita fluidez.",
-    highlight: false,
-    benefits: ["Wi-Fi de alta performance", "Instalação rápida", "Suporte local"],
-  },
-  {
-    name: "800 Mega",
-    price: "R$ 159,90",
-    description: "A opção mais completa para famílias conectadas, jogos e múltiplas telas.",
-    highlight: true,
-    benefits: ["Upload turbinado", "Menor latência", "Prioridade no atendimento"],
-  },
-  {
-    name: "1 Giga",
-    price: "R$ 199,90",
-    description: "Velocidade máxima para quem quer experiência premium sem travamentos.",
-    highlight: false,
-    benefits: ["Ultra velocidade", "Cobertura para casa toda", "Roteador incluso"],
-  },
-];
-
-const mobilePlans = [
-  {
-    title: "Plano 30 GB",
-    description: "Dados de sobra com WhatsApp grátis para conversar sem gastar da franquia.",
-    price: "R$ 49,90"
-  },
-  {
-    title: "Plano 50 GB",
-    description: "Ideal para redes sociais, vídeos curtos, chamadas e navegação intensa.",
-    price: "R$ 79,90"
-  },
-  {
-    title: "Plano 100 GB",
-    description: "Ligações ilimitadas para fixo e móvel com praticidade no dia a dia.",
-    price: "R$ 109,90"
-  },
-];
-
-const telefoniaFixa = [
-  {
-    title: "Plano 200min",
-    description: "200 minutos mensais para ligações locais e nacionais, com qualidade garantida.",
-    value: "R$ 39,90/mês",
-  },
-  {
-    title: "Plano 500min",
-    description: "500 minutos para falar com quem quiser, ideal para famílias e pequenas empresas.",
-    value: "R$ 69,90/mês",
-  },
-  {
-    title: "Plano Ilimitado",
-    description: "Ligações ilimitadas para fixo e móvel, ideal para quem fala muito e quer economia.",
-    value: "R$ 99,90/mês",
-  }
-]
-
 const footerLinks = ["Sobre a Serrasul", "Planos", "Teste de Velocidade", "Status da Rede"];
+
+const formatCurrency = (value: number) =>
+  value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 export default function Page() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [testeExecutado, setTesteExecutado] = useState(false);
+  const [internetPlans, setInternetPlans] = useState<null | PlanoInternet[]>(null);
+  const [mobilePlans, setMobilePlans] = useState<null | PlanoMovel[]>(null);
+  const [planosTelefoneFixo, setPlanosTelefoneFixo] = useState<null | PlanoFixo[]>(null);
+  const { getPlanosInternet } = planosInternet;
+  const { getPlanosMovel } = planosMovel;
+  const { getPlanosFixo } = planosFixo;
+
+  const orderedInternetPlans = internetPlans
+    ? (() => {
+      const highlightPlan = internetPlans.find((plan) => plan.highlight);
+      if (!highlightPlan) {
+        return internetPlans;
+      }
+
+      const otherPlans = internetPlans.filter((plan) => !plan.highlight);
+      return [otherPlans[0], highlightPlan, ...otherPlans.slice(1)].filter(Boolean);
+    })()
+    : null;
 
   function handleSendMessage(e: React.MouseEvent<HTMLButtonElement>): void {
     e.preventDefault();
-    window.open("https://wa.me/5500000000000", "_blank");
+    window.open("https://wa.me/558004555555", "_blank");
   }
+
+  useEffect(() => {
+    void (async () => {
+      const plans = await getPlanosInternet();
+      setInternetPlans(plans);
+    })();
+  }, [getPlanosInternet]);
+
+  useEffect(() => {
+    void (async () => {
+      const plans = await getPlanosMovel();
+      setMobilePlans(plans);
+    })();
+  }, [getPlanosMovel]);
+
+  useEffect(() => {
+    void (async () => {
+      const plans = await getPlanosFixo();
+      setPlanosTelefoneFixo(plans);
+    })();
+  }, [getPlanosFixo]);
 
   return (
     <main className="min-h-screen bg-(--color-light) text-(--color-medium)">
@@ -121,13 +110,17 @@ export default function Page() {
 
           <div className="hidden items-center gap-3 lg:flex">
             <a
-              href="#cliente"
+              href="https://clientes.serrasultelecom.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/5"
             >
               Área do Cliente
             </a>
             <a
-              href="#contato"
+              href="https://wa.me/558004555555"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-(--color-orange) px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[rgba(var(--color-orange-rgb),0.3)] transition hover:bg-(--color-orange-light)"
             >
               Falar com Consultor
@@ -194,7 +187,9 @@ export default function Page() {
                 <ChevronRight className="h-4 w-4" />
               </a>
               <a
-                href="#contato"
+                href="https://wa.me/558004555555"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-7 py-4 text-sm font-bold text-white transition hover:border-white/25 hover:bg-white/10"
               >
                 <MessageCircle className="h-4 w-4" />
@@ -205,7 +200,7 @@ export default function Page() {
             <div className="mt-10 grid gap-4 sm:grid-cols-3">
               {[
                 { value: "100%", label: "Foco em estabilidade" },
-                { value: "24h", label: "Suporte local" },
+                { value: "24h", label: "Suporte" },
                 { value: "TV", label: "Inclusa em todos os planos" },
               ].map((item) => (
                 <div key={item.label} className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur">
@@ -268,9 +263,9 @@ export default function Page() {
           </div>
 
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
-            {internetPlans.map((plan) => (
+            {orderedInternetPlans && orderedInternetPlans.map((plan) => (
               <article
-                key={plan.name}
+                key={plan.nome}
                 className={`relative overflow-hidden rounded-4xl border bg-white p-6 shadow-[0_20px_50px_rgba(33,38,64,0.08)] transition hover:-translate-y-1 ${plan.highlight ? "border-[#F25F29] ring-2 ring-[#F25F29]/10" : "border-(--color-medium)/10"
                   }`}
               >
@@ -283,7 +278,7 @@ export default function Page() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#0367A6]">Plano Fibra</p>
-                    <h3 className="mt-2 text-3xl font-black text-[#212640]">{plan.name}</h3>
+                    <h3 className="mt-2 text-3xl font-black text-[#212640]">{plan.nome}</h3>
                   </div>
                   <div className="rounded-2xl bg-(--color-medium)/5 p-3 text-[#0367A6]">
                     <Zap className="h-6 w-6" />
@@ -293,12 +288,12 @@ export default function Page() {
                 <div className={`mt-6 rounded-3xl  p-5 text-white shadow-inner shadow-black/20 ${plan.highlight ? 'bg-(--color-orange)' : 'bg-(--color-medium)'}`}>
                   <p className="text-sm uppercase tracking-[0.3em] text-white/45">A partir de</p>
                   <div className="mt-2 flex items-end gap-2">
-                    <span className="text-4xl font-black">{plan.price}</span>
+                    <span className="text-4xl font-black">{formatCurrency(plan.preco)}</span>
                     <span className="pb-1 text-sm text-white/60">/mês</span>
                   </div>
                 </div>
 
-                <p className="mt-5 text-sm leading-6 text-(--color-medium)/75">{plan.description}</p>
+                <p className="mt-5 text-sm leading-6 text-(--color-medium)/75">{plan.descricao}</p>
 
                 <div className="mt-5 rounded-[1.35rem] border-2 border-dashed border-[#F25F29]/40 bg-[#F25F29]/8 p-4">
                   <div className="flex items-center gap-3">
@@ -315,7 +310,7 @@ export default function Page() {
                 </div>
 
                 <ul className="mt-5 space-y-3">
-                  {plan.benefits.map((benefit) => (
+                  {plan.beneficios.map((benefit) => (
                     <li key={benefit} className="flex items-center gap-3 text-sm text-(--color-medium)/80">
                       <CheckCircle2 className="h-5 w-5 flex-none text-[#F25F29]" />
                       {benefit}
@@ -347,16 +342,16 @@ export default function Page() {
               <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Planos de telefonia fixa, para suas chamadas.</h2>
 
               <div className="mt-8 space-y-4">
-                {telefoniaFixa.map((plan) => (
-                  <div key={plan.title} className="rounded-3xl border border-white/10 bg-white/5 p-4">
+                {planosTelefoneFixo && planosTelefoneFixo.map((plan) => (
+                  <div key={plan.nome} className="rounded-3xl border border-white/10 bg-white/5 p-4">
                     <div className="flex items-start gap-3">
                       <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-(--color-orange) text-white">
                         <Phone className="h-5 w-5" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-white">{plan.title}</h3>
-                        <p className="mt-1 text-sm leading-6 text-white/65">{plan.description}</p>
-                        <p className="mt-2 text-sm font-bold text-white">{plan.value}</p>
+                        <h3 className="text-lg font-semibold text-white">{plan.nome}</h3>
+                        <p className="mt-1 text-sm leading-6 text-white/65">{plan.descricao}</p>
+                        <p className="mt-2 text-sm font-bold text-white">{formatCurrency(plan.preco)}</p>
                       </div>
                     </div>
                   </div>
@@ -377,16 +372,16 @@ export default function Page() {
                   <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Planos de telefonia móvel, para utilizar internet em todo lugar!</h2>
                 </div>
                 <div className="mt-6 space-y-4">
-                  {mobilePlans.map((plan) => (
-                    <div key={plan.title} className="rounded-3xl border border-[--color-medium] bg-white/5 p-4 ">
+                  {mobilePlans && mobilePlans.map((plan) => (
+                    <div key={plan.nome} className="rounded-3xl border border-[--color-medium] bg-white/5 p-4 ">
                       <div className="flex items-start gap-3">
                         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-(--color-orange) text-white">
                           <Smartphone className="h-5 w-5" />
                         </div>
                         <div className="flex-1 min-w-0 border border-white/10 rounded-2xl bg-white/5 p-0">
-                          <h3 className="text-lg font-semibold text-[--color-dark]">{plan.title}</h3>
-                          <p className="mt-1 text-sm leading-6 text-[--color-dark]/65">{plan.description}</p>
-                          <p className="mt-2 text-sm font-bold text-[--color-orange]">{plan.price}</p>
+                          <h3 className="text-lg font-semibold text-[--color-dark]">{plan.nome}</h3>
+                          <p className="mt-1 text-sm leading-6 text-[--color-dark]/65">{plan.descricao}</p>
+                          <p className="mt-2 text-sm font-bold text-[--color-orange]">{formatCurrency(plan.preco)}</p>
                         </div>
                       </div>
                     </div>
@@ -499,13 +494,7 @@ export default function Page() {
           <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr_0.8fr]">
             <div>
               <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-(--color-orange) font-black text-white">
-                  SS
-                </span>
-                <div>
-                  <p className="text-sm uppercase tracking-[0.35em] text-white/45">Serrasul.</p>
-                  <p className="text-lg font-semibold">Telecom</p>
-                </div>
+                <Image src={logo} alt="Logo da Serrasul Telecom" className="h-10 w-auto" />
               </div>
               <p className="mt-5 max-w-xl text-sm leading-7 text-white/70">
                 Provedor local de internet, TV, móvel e telefonia com foco em experiência, estabilidade e conversão.
@@ -537,22 +526,30 @@ export default function Page() {
             <div>
               <h3 className="text-sm font-bold uppercase tracking-[0.35em] text-white/45">Contato</h3>
               <ul className="mt-5 space-y-3 text-sm text-white/72">
-                <li>(00) 0000-0000</li>
-                <li>contato@serrasul.com.br</li>
-                <li>CNPJ: 00.000.000/0001-00</li>
-                <li>Rua Exemplo, 123 - Centro</li>
+                <li>0800 455 5555</li>
+                <li>sac@serrasultelecom.com.br</li>
+                <li>CNPJ: 22.349.202/0001-86</li>
+                <li>Av. John Kennedy, 2070 - Centro - Flores da Cunha</li>
               </ul>
             </div>
           </div>
 
           <div className="mt-12 border-t border-white/10 pt-6 text-xs text-white/50">
-            © {new Date().getFullYear()} Serrasul Telecom. Todos os direitos reservados.
+            <a
+              href="https://serrasultelecom.com.br/admin"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/50 hover:text-white"
+            >
+              Area restrita
+            </a>
+            <p>© {new Date().getFullYear()} Serrasul Telecom. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
 
       <a
-        href="https://wa.me/5500000000000"
+        href="https://wa.me/558004555555"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Falar com a Serrasul no WhatsApp"
