@@ -2,6 +2,7 @@
 
 import { clientAuth } from "@/app/lib/firebaseClient";
 import { planosFixo, planosInternet, planosMovel } from "@/services/planos";
+import { problemas } from "@/services/problemas";
 import type {
   PlanoFixo,
   PlanoFixoFormData,
@@ -10,6 +11,7 @@ import type {
   PlanoMovel,
   PlanoMovelFormData,
 } from "@/types/planosType";
+import type { Problem, ProblemFormData } from "@/types/problemType";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import {
   AlertCircle,
@@ -20,6 +22,7 @@ import {
   Search,
   Trash2,
   X,
+  LogOut,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -46,6 +49,14 @@ type PlanoMovelFormState = {
   beneficios: string;
 };
 
+type ProblemFormState = {
+  titulo: string;
+  descricao: string;
+  status: "aberto" | "resolvido";
+  inicioEm: string;
+  fimEstimado: string;
+};
+
 const emptyInternetFormState: PlanoInternetFormState = {
   nome: "",
   velocidade: "",
@@ -68,6 +79,14 @@ const emptyMovelFormState: PlanoMovelFormState = {
   beneficios: "",
 };
 
+const emptyProblemFormState: ProblemFormState = {
+  titulo: "",
+  descricao: "",
+  status: "aberto",
+  inicioEm: "",
+  fimEstimado: "",
+};
+
 const toBenefits = (value: string) =>
   value
     .split("\n")
@@ -77,6 +96,42 @@ const toBenefits = (value: string) =>
 const formatCurrency = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+const formatDateTime = (value: string) => {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date).replace(",", " às");
+};
+
+const toDateTimeInputValue = (value: string) => {
+  if (!value) {
+    return "";
+  }
+
+  const date = value.includes("T") ? new Date(value) : new Date(`${value}T00:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return value.slice(0, 16);
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 export default function AdminPage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -85,30 +140,37 @@ export default function AdminPage() {
   const [internetPlans, setInternetPlans] = useState<PlanoInternet[]>([]);
   const [fixedPlans, setFixedPlans] = useState<PlanoFixo[]>([]);
   const [mobilePlans, setMobilePlans] = useState<PlanoMovel[]>([]);
+  const [problemsList, setProblemsList] = useState<Problem[]>([]);
 
   const [loadingInternet, setLoadingInternet] = useState(false);
   const [loadingFixed, setLoadingFixed] = useState(false);
   const [loadingMobile, setLoadingMobile] = useState(false);
+  const [loadingProblems, setLoadingProblems] = useState(false);
 
   const [savingInternet, setSavingInternet] = useState(false);
   const [savingFixed, setSavingFixed] = useState(false);
   const [savingMobile, setSavingMobile] = useState(false);
+  const [savingProblem, setSavingProblem] = useState(false);
 
   const [deletingInternetId, setDeletingInternetId] = useState<string | null>(null);
   const [deletingFixedId, setDeletingFixedId] = useState<string | null>(null);
   const [deletingMobileId, setDeletingMobileId] = useState<string | null>(null);
+  const [deletingProblemId, setDeletingProblemId] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [problemSearchTerm, setProblemSearchTerm] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   const [editingInternet, setEditingInternet] = useState<PlanoInternet | null>(null);
   const [editingFixed, setEditingFixed] = useState<PlanoFixo | null>(null);
   const [editingMobile, setEditingMobile] = useState<PlanoMovel | null>(null);
+  const [editingProblem, setEditingProblem] = useState<Problem | null>(null);
 
   const [internetForm, setInternetForm] = useState<PlanoInternetFormState>(emptyInternetFormState);
   const [fixedForm, setFixedForm] = useState<PlanoFixoFormState>(emptyFixoFormState);
   const [mobileForm, setMobileForm] = useState<PlanoMovelFormState>(emptyMovelFormState);
+  const [problemForm, setProblemForm] = useState<ProblemFormState>(emptyProblemFormState);
 
   useEffect(() => {
     if (!clientAuth) {
@@ -141,6 +203,7 @@ export default function AdminPage() {
     void refreshInternetPlans();
     void refreshFixedPlans();
     void refreshMobilePlans();
+    void refreshProblems();
   }, [currentUser]);
 
   const filteredInternetPlans = internetPlans.filter((plano) => {
@@ -151,6 +214,18 @@ export default function AdminPage() {
     }
 
     return [plano.nome, plano.velocidade, plano.descricao, plano.highlight ? "destacado" : ""].some((value) =>
+      value.toLowerCase().includes(term),
+    );
+  });
+
+  const filteredProblems = problemsList.filter((problem) => {
+    const term = problemSearchTerm.trim().toLowerCase();
+
+    if (!term) {
+      return true;
+    }
+
+    return [problem.titulo, problem.descricao, problem.status, problem.inicioEm, problem.fimEstimado].some((value) =>
       value.toLowerCase().includes(term),
     );
   });
@@ -168,6 +243,11 @@ export default function AdminPage() {
   function resetMobileForm() {
     setEditingMobile(null);
     setMobileForm(emptyMovelFormState);
+  }
+
+  function resetProblemForm() {
+    setEditingProblem(null);
+    setProblemForm(emptyProblemFormState);
   }
 
   function startEditingInternet(plano: PlanoInternet) {
@@ -202,6 +282,19 @@ export default function AdminPage() {
       preco: String(plano.preco),
       descricao: plano.descricao,
       beneficios: plano.beneficios.join("\n"),
+    });
+    setErrorMessage("");
+    setSuccessMessage("");
+  }
+
+  function startEditingProblem(problem: Problem) {
+    setEditingProblem(problem);
+    setProblemForm({
+      titulo: problem.titulo,
+      descricao: problem.descricao,
+      status: problem.status,
+      inicioEm: toDateTimeInputValue(problem.inicioEm),
+      fimEstimado: toDateTimeInputValue(problem.fimEstimado),
     });
     setErrorMessage("");
     setSuccessMessage("");
@@ -243,6 +336,19 @@ export default function AdminPage() {
       setErrorMessage(error instanceof Error ? error.message : "Erro ao buscar planos de telefonia móvel");
     } finally {
       setLoadingMobile(false);
+    }
+  }
+
+  async function refreshProblems() {
+    setLoadingProblems(true);
+
+    try {
+      const data = await problemas.getProblemas();
+      setProblemsList(data);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Erro ao buscar problemas");
+    } finally {
+      setLoadingProblems(false);
     }
   }
 
@@ -364,6 +470,44 @@ export default function AdminPage() {
     }
   }
 
+  async function handleProblemSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSavingProblem(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const payload: ProblemFormData = {
+      titulo: problemForm.titulo.trim(),
+      descricao: problemForm.descricao.trim(),
+      status: problemForm.status,
+      inicioEm: problemForm.inicioEm.trim(),
+      fimEstimado: problemForm.fimEstimado.trim(),
+    };
+
+    if (!payload.titulo || !payload.descricao || !payload.inicioEm || !payload.fimEstimado) {
+      setSavingProblem(false);
+      setErrorMessage("Preencha todos os campos do problema.");
+      return;
+    }
+
+    try {
+      if (editingProblem) {
+        await problemas.updateProblema(editingProblem.id, payload);
+        setSuccessMessage("Problema atualizado com sucesso.");
+      } else {
+        await problemas.createProblema(payload);
+        setSuccessMessage("Problema criado com sucesso.");
+      }
+
+      await refreshProblems();
+      resetProblemForm();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Erro ao salvar problema");
+    } finally {
+      setSavingProblem(false);
+    }
+  }
+
   async function handleDeleteInternet(id: string) {
     if (!window.confirm("Remover este plano de internet?")) {
       return;
@@ -433,6 +577,29 @@ export default function AdminPage() {
     }
   }
 
+  async function handleDeleteProblem(id: string) {
+    if (!window.confirm("Remover este problema?")) {
+      return;
+    }
+
+    setDeletingProblemId(id);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      await problemas.deleteProblema(id);
+      await refreshProblems();
+      if (editingProblem?.id === id) {
+        resetProblemForm();
+      }
+      setSuccessMessage("Problema removido com sucesso.");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Erro ao remover problema");
+    } finally {
+      setDeletingProblemId(null);
+    }
+  }
+
   if (checkingAuth) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
@@ -445,6 +612,28 @@ export default function AdminPage() {
     return null;
   }
 
+  function handleLogout(): void {
+    if (clientAuth) {
+      clientAuth.signOut().then(() => {
+        router.replace("/admin/login");
+      });
+    }
+    setErrorMessage("");
+    setSuccessMessage("");
+    setInternetPlans([]);
+    setFixedPlans([]);
+    setMobilePlans([]);
+    setProblemsList([]);
+    setEditingInternet(null);
+    setEditingFixed(null);
+    setEditingMobile(null);
+    setEditingProblem(null);
+    setInternetForm(emptyInternetFormState);
+    setFixedForm(emptyFixoFormState);
+    setMobileForm(emptyMovelFormState);
+    setProblemForm(emptyProblemFormState);
+  }
+
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#071522_0%,#0b1f33_34%,#f2f2f2_34%,#f2f2f2_100%)] px-4 py-8 text-slate-900 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
@@ -452,18 +641,18 @@ export default function AdminPage() {
           <p className="text-xs font-bold uppercase tracking-[0.4em] text-white/45">Admin</p>
           <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Planos de Internet, Fixo e Móvel</h1>
+              <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Planos e problemas</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">
-                Crie, edite, busque e remova planos sem sair do painel.
+                Crie, edite, busque e remova planos e problemas sem sair do painel.
               </p>
             </div>
             <button
               type="button"
-              onClick={resetInternetForm}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/5"
+              onClick={handleLogout}
+              className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/5 bg-gray-700"
             >
-              <Plus className="h-4 w-4" />
-              Novo plano
+              <LogOut className="h-4 w-4" />
+              Sair
             </button>
           </div>
         </div>
@@ -963,6 +1152,190 @@ export default function AdminPage() {
                   </article>
                 ))
               )}
+            </div>
+          </section>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+          <section className="rounded-4xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-2xl font-black text-slate-950">
+                  {editingProblem ? "Editar problema" : "Novo problema"}
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">Cadastro no mesmo padrão dos planos.</p>
+              </div>
+              {editingProblem && (
+                <button
+                  type="button"
+                  onClick={resetProblemForm}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                >
+                  <X className="h-4 w-4" />
+                  Cancelar edição
+                </button>
+              )}
+            </div>
+
+            <form className="mt-6 grid gap-4" onSubmit={handleProblemSubmit}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2 text-sm font-medium text-slate-700">
+                  Título
+                  <input
+                    value={problemForm.titulo}
+                    onChange={(event) => setProblemForm((current) => ({ ...current, titulo: event.target.value }))}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-400"
+                    placeholder="Bairro São José"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-slate-700">
+                  Status
+                  <select
+                    value={problemForm.status}
+                    onChange={(event) =>
+                      setProblemForm((current) => ({ ...current, status: event.target.value as ProblemFormState["status"] }))
+                    }
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-400"
+                  >
+                    <option value="aberto">Aberto</option>
+                    <option value="resolvido">Resolvido</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2 text-sm font-medium text-slate-700">
+                  Início em
+                  <input
+                    type="datetime-local"
+                    value={problemForm.inicioEm}
+                    onChange={(event) => setProblemForm((current) => ({ ...current, inicioEm: event.target.value }))}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-400"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-slate-700">
+                  Fim estimado
+                  <input
+                    type="datetime-local"
+                    value={problemForm.fimEstimado}
+                    onChange={(event) => setProblemForm((current) => ({ ...current, fimEstimado: event.target.value }))}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-400"
+                  />
+                </label>
+              </div>
+
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                Descrição
+                <textarea
+                  rows={5}
+                  value={problemForm.descricao}
+                  onChange={(event) => setProblemForm((current) => ({ ...current, descricao: event.target.value }))}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-400"
+                  placeholder="Descreva o problema..."
+                />
+              </label>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="submit"
+                  disabled={savingProblem}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {savingProblem ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  {editingProblem ? "Salvar alterações" : "Criar problema"}
+                </button>
+                <button
+                  type="button"
+                  onClick={resetProblemForm}
+                  className="inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Limpar formulário
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <section className="rounded-4xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-950">Lista de problemas</h2>
+                  <p className="mt-1 text-sm text-slate-500">{filteredProblems.length} problema(s) encontrado(s)</p>
+                </div>
+                <label className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2">
+                  <Search className="h-4 w-4 text-slate-400" />
+                  <input
+                    value={problemSearchTerm}
+                    onChange={(event) => setProblemSearchTerm(event.target.value)}
+                    className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+                    placeholder="Buscar problema"
+                  />
+                </label>
+              </div>
+
+              <div className="mt-2">
+                {loadingProblems ? (
+                  <div className="flex items-center gap-3 rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Carregando problemas...
+                  </div>
+                ) : filteredProblems.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
+                    Nenhum problema encontrado.
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {filteredProblems.map((problem) => (
+                      <article key={problem.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-lg font-bold text-slate-950">{problem.titulo}</h3>
+                              <span
+                                className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${
+                                  problem.status === "resolvido"
+                                    ? "bg-emerald-200 text-emerald-900"
+                                    : "bg-amber-200 text-amber-900"
+                                }`}
+                              >
+                                {problem.status}
+                              </span>
+                            </div>
+                            <p className="mt-3 text-sm leading-6 text-slate-600">{problem.descricao}</p>
+                            <p className="mt-3 text-sm font-medium text-slate-500">
+                              Início: {formatDateTime(problem.inicioEm)} · Previsão: {formatDateTime(problem.fimEstimado)}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => startEditingProblem(problem)}
+                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                            >
+                              <PencilLine className="h-4 w-4" />
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void handleDeleteProblem(problem.id)}
+                              disabled={deletingProblemId === problem.id}
+                              className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                              {deletingProblemId === problem.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                              Excluir
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </section>
         </div>

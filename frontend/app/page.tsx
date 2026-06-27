@@ -8,6 +8,7 @@ import {
   Menu,
   MessageCircle,
   Phone,
+  Settings,
   ShieldCheck,
   Smartphone,
   Sparkles,
@@ -20,6 +21,8 @@ import Image from "next/image";
 import logo from "../public/LOGO.png";
 import { PlanoFixo, PlanoInternet, PlanoMovel } from "@/types/planosType";
 import { planosFixo, planosInternet, planosMovel } from "@/services/planos";
+import { Problem } from "@/types/problemType";
+import { problemas } from "@/services/problemas";
 
 const navigation = [
   { label: "Planos", href: "#planos" },
@@ -40,13 +43,14 @@ const formatCurrency = (value: number) =>
 
 export default function Page() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [testeExecutado, setTesteExecutado] = useState(false);
   const [internetPlans, setInternetPlans] = useState<null | PlanoInternet[]>(null);
   const [mobilePlans, setMobilePlans] = useState<null | PlanoMovel[]>(null);
   const [planosTelefoneFixo, setPlanosTelefoneFixo] = useState<null | PlanoFixo[]>(null);
+  const [problems, setProblems] = useState<null | Problem[]>(null);
   const { getPlanosInternet } = planosInternet;
   const { getPlanosMovel } = planosMovel;
   const { getPlanosFixo } = planosFixo;
+  const { getProblemas } = problemas;
 
   const orderedInternetPlans = internetPlans
     ? (() => {
@@ -85,6 +89,13 @@ export default function Page() {
       setPlanosTelefoneFixo(plans);
     })();
   }, [getPlanosFixo]);
+
+  useEffect(() => {
+    void (async () => {
+      const probs = await getProblemas();
+      setProblems(probs);
+    })();
+  }, [getProblemas]);
 
   return (
     <main className="min-h-screen bg-(--color-light) text-(--color-medium)">
@@ -398,56 +409,61 @@ export default function Page() {
           <div className="max-w-2xl">
             <p className="text-sm font-bold uppercase tracking-[0.35em] text-(--color-medium)">Ferramentas extras</p>
             <h2 className="mt-3 text-3xl font-black tracking-tight text-(--color-medium) sm:text-5xl">
-              Dois atalhos para reforçar confiança e conversão.
+              Monitoramento da rede
             </h2>
           </div>
 
           <div className="mt-12 grid gap-6 lg:grid-cols-2">
-            <a
-              href="#"
-              className="group rounded-4xl bg-white p-7 shadow-[0_20px_50px_rgba(33,38,64,0.08)] transition hover:-translate-y-1"
-            >
-              <div className="flex items-start justify-between gap-6">
-                <div>
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-(--color-orange) text-white shadow-lg shadow-[#F25F29]/20">
-                    <Zap className="h-7 w-7" />
-                  </div>
-                  <h3 className="mt-5 text-2xl font-black text-[#212640]">Speedtest Serrasul</h3>
-                  <p className="mt-3 max-w-xl text-sm leading-7 text-[#212640]/70">
-                    Mostre a velocidade real da conexão e fortaleça a percepção de qualidade com uma experiência simples
-                    e objetiva.
-                  </p>
+            <div className="group rounded-4xl bg-[linear-gradient(160deg,var(--color-medium),var(--color-medium))] p-7 text-white shadow-[0_20px_50px_rgba(33,38,64,0.14)] transition hover:-translate-y-1">
+              <div className="absolute right-0 top-0 h-32 w-32 -translate-y-1/3 translate-x-1/3 rounded-full bg-[rgba(var(--color-orange-rgb),0.16)] blur-3xl" />
+
+              <div className="relative flex items-start justify-between gap-6">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-(--color-orange) shadow-inner shadow-white/10">
+                  <Settings className="h-7 w-7" />
                 </div>
+
+                <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-white/70">
+                  Atendimento imediato
+                </span>
               </div>
-              {testeExecutado ? (
-                <div className="mt-6 grid grid-cols-3 gap-3">
-                  {[
-                    ["Download", "940 Mbps"],
-                    ["Upload", "860 Mbps"],
-                    ["Ping", "5 ms"],
-                  ].map(([label, value]) => (
-                    <div key={label} className="rounded-2xl bg-(--color-medium) p-4 text-center text-white">
-                      <p className="text-xs uppercase tracking-[0.25em] text-white/45">{label}</p>
-                      <p className="mt-2 text-lg font-black">{value}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="mt-6 flex items-center justify-center">
-                  <button
-                    onClick={() => setTesteExecutado(true)}
-                    className="inline-flex items-center gap-2 rounded-full bg-(--color-orange) px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#F25F29]/30 transition hover:bg-[#F25A38]"
-                  >
-                    Iniciar teste
-                    <Zap className="h-4 w-4" />
+
+              <div className="relative mt-6">
+                <h3 className="text-2xl font-black sm:text-3xl">Suporte que resolve sem complicação</h3>
+                <p className="mt-3 max-w-xl text-sm leading-7 text-white/72">
+                  Se a conexão oscilar, o sinal cair ou surgir qualquer dúvida, nossa equipe entra em ação com rapidez,
+                  orientação clara e acompanhamento até tudo voltar ao normal.
+                </p>
+              </div>
+
+              <div className="relative mt-6 grid gap-3 sm:grid-cols-3">
+                {[
+                  "Diagnóstico rápido",
+                  "Atendimento local",
+                  "Acompanhamento dedicado",
+                ].map((item) => (
+                  <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80">
+                    {item}
+                  </div>
+                ))}
+              </div>
+
+              <div className="relative mt-7 rounded-[1.6rem] border border-white/10 bg-white/5 p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.28em] text-(--color-orange)">Precisa de ajuda agora?</p>
+                    <p className="mt-2 text-sm leading-6 text-white/75">
+                      Toque no botão e fale diretamente com nossa equipe de suporte.
+                    </p>
+                  </div>
+                  <button onClick={(e) => handleSendMessage(e)} className="inline-flex items-center justify-center gap-2 rounded-full bg-(--color-orange) px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[rgba(var(--color-orange-rgb),0.25)] transition hover:-translate-y-0.5 hover:bg-(--color-orange-light)">
+                    Acionar suporte
+                    <MessageCircle className="h-4 w-4" />
                   </button>
                 </div>
-              )
-              }
-            </a>
+              </div>
+            </div>
 
-            <a
-              href="#"
+            <div
               className="group rounded-4xl bg-[linear-gradient(160deg,var(--color-medium),var(--color-medium))] p-7 text-white shadow-[0_20px_50px_rgba(33,38,64,0.14)] transition hover:-translate-y-1"
             >
               <div className="flex items-start justify-between gap-6">
@@ -472,19 +488,42 @@ export default function Page() {
               <div className="mt-6 rounded-[1.6rem] border border-white/10 bg-white/5 p-5">
                 <div className="flex items-center justify-between text-sm text-white/70">
                   <span>Rede principal</span>
-                  <span className="font-semibold text-(--color-success)">Sem ocorrências</span>
+                  {problems && problems.length > 0 ? (
+                    <span className="font-semibold text-(--color-warning)">Problemas registrados</span>
+                  ) : (
+                    <span className="font-semibold text-(--color-success)">Sem ocorrências</span>
+                  )}
                 </div>
-                <div className="mt-4 h-28 rounded-[1.4rem] bg-[radial-gradient(circle_at_50%_30%,rgba(124,255,178,0.25),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))]">
-                  <div className="flex h-full items-center justify-center">
-                    <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-white/10">
-                      <div className="absolute inset-0 rounded-full border border-(--color-success)/40 animate-ping" />
-                      <div className="absolute inset-2 rounded-full border border-white/15" />
-                      <Clock3 className="h-8 w-8 text-(--color-success)" />
+                <div className="mt-4 max-h-80 overflow-y-auto rounded-[1.4rem] bg-[radial-gradient(circle_at_50%_30%,rgba(124,255,178,0.25),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))]">
+                  {problems && problems.length > 0 ? (
+                    <div className="flex flex-col gap-3 p-4">
+                      {problems.map((problem) => (
+                        <div key={problem.id} className="flex items-center justify-between gap-3 rounded-2xl bg-(--color-warning)/10 p-3">
+                          <div>
+                            <p className="text-sm font-semibold text-(--color-warning)">{problem.titulo}</p>
+                            <p className="mt-1 text-sm text-white/70">{problem.descricao}</p>
+                            <p className="mt-1 text-xs text-white/70">
+                              Início: {problem.inicioEm} | Estimativa: {problem.fimEstimado}
+                            </p>
+                          </div>
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-(--color-warning)/20 text-(--color-warning)">
+                            <Clock3 className="h-4 w-4" />
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-white/10">
+                        <div className="absolute inset-0 rounded-full border border-(--color-success)/40 animate-ping" />
+                        <div className="absolute inset-2 rounded-full border border-white/15" />
+                        <Clock3 className="h-8 w-8 text-(--color-success)" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            </a>
+            </div>
           </div>
         </div>
       </section>
