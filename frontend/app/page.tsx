@@ -506,7 +506,7 @@ export default function Page() {
                     <span className="font-semibold text-(--color-success)">Sem ocorrências</span>
                   )}
                 </div>
-                <div className="mt-4 max-h-80 overflow-y-auto rounded-[1.4rem] bg-[radial-gradient(circle_at_50%_30%,rgba(124,255,178,0.25),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))]">
+                <div className="mt-4 max-h-80 overflow-y-auto overflow-x-hidden rounded-[1.4rem] bg-[radial-gradient(circle_at_50%_30%,rgba(124,255,178,0.25),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))]">
                   {problems && problems.length > 0 ? (
                     <div className="flex flex-col gap-3 p-4">
                       {problems.map((problem) => (
@@ -525,8 +525,8 @@ export default function Page() {
                       ))}
                     </div>
                   ) : (
-                    <div className="flex h-full items-center justify-center">
-                      <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-white/10">
+                    <div className="flex min-h-44 items-center justify-center overflow-hidden py-10">
+                      <div className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-white/10">
                         <div className="absolute inset-0 rounded-full border border-(--color-success)/40 animate-ping" />
                         <div className="absolute inset-2 rounded-full border border-white/15" />
                         <Clock3 className="h-8 w-8 text-(--color-success)" />
