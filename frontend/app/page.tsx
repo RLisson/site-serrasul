@@ -477,11 +477,23 @@ export default function Page() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2 rounded-full bg-(--color-success)/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-(--color-success)">
-                  <span className="relative flex h-3 w-3">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-(--color-success) opacity-75" />
-                    <span className="relative inline-flex h-3 w-3 rounded-full bg-(--color-success)" />
-                  </span>
-                  100% Operacional
+                  {problems && problems.length > 0 ? (
+                    <>
+                    <span className="relative flex h-3 w-3">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-(--color-warning) opacity-75" />
+                      <span className="relative inline-flex h-3 w-3 rounded-full bg-(--color-warning)" />
+                    </span>
+                    <p className="text-(--color-warning)">Problemas registrados</p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="relative flex h-3 w-3">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-(--color-success) opacity-75" />
+                        <span className="relative inline-flex h-3 w-3 rounded-full bg-(--color-success)" />
+                      </span>
+                      <p>100% Operacional</p>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -539,7 +551,7 @@ export default function Page() {
                 Provedor local de internet, TV, móvel e telefonia com foco em experiência, estabilidade e conversão.
               </p>
               <a
-                href="https://wa.me/5500000000000"
+                href="https://wa.me/5580045555555"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-6 inline-flex items-center gap-2 rounded-full bg-(--color-orange) px-5 py-3 text-sm font-bold text-white transition hover:bg-(--color-orange-light)"

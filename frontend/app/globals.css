@@ -15,6 +15,8 @@
   --color-light-rgb: 242 242 242;
   --color-success-rgb: 124 255 178;
   --color-whatsapp-rgb: 37 211 102;
+  --color-warning: #F2C94C;
+  --color-warning-rgb: 242 201 76;
 
   --background: var(--color-light);
   --foreground: var(--color-medium);
